@@ -67,11 +67,31 @@ body::after{content:'';position:fixed;bottom:-30%;left:-20%;width:60vw;height:60
 .progress-bar.coral{background:linear-gradient(90deg,var(--coral),var(--coral-light))}
 .progress-bar.amber{background:linear-gradient(90deg,var(--amber),var(--amber-light))}
 .progress-bar.green{background:linear-gradient(90deg,#5CB478,#82D49E)}
+.progress-bar.purple{background:linear-gradient(90deg,#8060A0,#B090D0)}
 .progress-bar::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.3) 50%,transparent 100%);animation:shimmer 2s ease-in-out infinite}
 @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
 .prestore-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,rgba(200,170,60,0.12),rgba(229,160,75,0.12));padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:600;color:var(--amber)}
 .prestore-add{color:var(--text-primary);font-weight:700}
 .prestore-use{color:#D45555;font-weight:700}
+.songlist-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,rgba(160,120,200,0.12),rgba(180,140,220,0.12));padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:600;color:#8060A0;cursor:pointer;transition:var(--transition)}
+.songlist-badge:hover{background:linear-gradient(135deg,rgba(160,120,200,0.2),rgba(180,140,220,0.2))}
+.songlist-add{color:var(--text-primary);font-weight:700}
+.songlist-use{color:#D45555;font-weight:700}
+.songlist-modal-body{padding:8px 0}
+.songlist-current{text-align:center;padding:16px;background:linear-gradient(135deg,rgba(160,120,200,0.08),rgba(180,140,220,0.08));border-radius:var(--radius-md);margin-bottom:16px;font-size:1.2rem;font-weight:700;color:#8060A0}
+.songlist-op-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.songlist-op-row .form-input{flex:1;text-align:center;font-size:1rem;font-weight:600}
+.songlist-op-row .btn{flex:none;width:80px;padding:10px 0;font-size:0.85rem}
+.songlist-op-label{font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.songlist-history{max-height:240px;overflow-y:auto;margin-top:12px}
+.songlist-history-title{font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em}
+.songlist-history-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:var(--radius-sm);margin-bottom:4px;font-size:0.82rem;background:rgba(160,120,200,0.04)}
+.songlist-history-item .sh-date{color:var(--text-muted);font-size:0.75rem}
+.songlist-history-item .sh-type{font-weight:600}
+.songlist-history-item .sh-type.add{color:#5CB478}
+.songlist-history-item .sh-type.use{color:#D45555}
+.songlist-history-item .sh-amount{font-weight:700;color:var(--text-primary)}
+.songlist-history-item .sh-note{color:var(--text-muted);font-size:0.75rem;margin-left:6px}
 .calendar-section{margin-top:16px;animation:fadeInUp 0.5s ease both;animation-delay:0.2s}
 .weekday-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
 .weekday-cell{text-align:center;font-size:0.7rem;font-weight:600;color:var(--text-muted);padding:6px 0;letter-spacing:0.05em}
@@ -220,6 +240,16 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
       <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">每月25日起预存计入下月</div>
     </div>
   </div>
+  <div class="form-group">
+    <label class="form-label">📺 是否有个人直播</label>
+    <select class="form-input" id="inputSolo"><option value="no">否</option><option value="yes">是</option></select>
+    <div id="soloGroup" style="display:none;margin-top:8px">
+      <label class="form-label" style="font-size:0.82rem;color:var(--text-muted)">个播时长</label>
+      <select class="form-input" id="inputSoloHours">
+        <option value="1">1 小时</option><option value="2">2 小时</option><option value="3">3 小时</option><option value="4">4 小时</option><option value="5">5 小时</option><option value="6">6 小时</option><option value="7">7 小时</option><option value="8">8 小时</option>
+      </select>
+    </div>
+  </div>
   <div class="credited-display" id="creditedDisplay">📊 计入时长 = 0 小时</div>
   <div class="modal-actions"><button class="btn btn-secondary" id="modalCancel">取消</button><button class="btn btn-primary" id="modalSave">保存</button></div>
   <div style="text-align:center;margin-top:8px"><button class="btn btn-danger" id="modalClear">清除当天记录</button></div>
@@ -231,6 +261,30 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
 <div class="modal-overlay" id="importModal"><div class="modal-panel"><div class="modal-handle"></div><div class="modal-date">导入数据</div>
   <div class="form-group"><label class="form-label">粘贴 JSON 数据，或选择文件导入</label><textarea class="import-textarea" id="importTextarea" placeholder="粘贴导出的 JSON 内容..."></textarea></div>
   <div class="modal-actions"><button class="btn btn-secondary" id="importCancel">取消</button><button class="tool-btn" id="importFileBtn" style="flex:none;max-width:none">📁 选择文件</button><button class="btn btn-primary" id="importConfirm">导入</button></div>
+</div></div>
+<div class="modal-overlay" id="songlistModal"><div class="modal-panel"><div class="modal-handle"></div><div class="modal-date">🎵 歌单余额管理</div>
+  <div class="songlist-modal-body">
+    <div class="songlist-current" id="songlistCurrentDisplay">🎵 当前余额：0 个</div>
+    <div id="songlistAdminOps">
+      <div class="songlist-op-label">➕ 新增歌单</div>
+      <div class="songlist-op-row">
+        <input type="number" class="form-input" id="songlistAddInput" min="1" placeholder="数量" value="">
+        <input type="text" class="form-input" id="songlistAddNote" placeholder="备注（可选）" style="flex:1.5">
+        <button class="btn btn-primary" id="songlistAddBtn">新增</button>
+      </div>
+      <div class="songlist-op-label">➖ 使用歌单</div>
+      <div class="songlist-op-row">
+        <input type="number" class="form-input" id="songlistUseInput" min="1" placeholder="数量" value="">
+        <input type="text" class="form-input" id="songlistUseNote" placeholder="备注（可选）" style="flex:1.5">
+        <button class="btn btn-primary" id="songlistUseBtn" style="background:linear-gradient(135deg,#D45555,#E87070)">使用</button>
+      </div>
+    </div>
+    <div class="songlist-history">
+      <div class="songlist-history-title">📜 操作记录</div>
+      <div id="songlistHistoryList"></div>
+    </div>
+  </div>
+  <div class="modal-actions"><button class="btn btn-secondary" id="songlistClose">关闭</button></div>
 </div></div>
 <div class="toast" id="toast"></div>
 
@@ -255,6 +309,7 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
   let monthDaysCache = {}; // { "2026-04": [{...}] }
   let monthMemosCache = {};
   let prestoreCache = null;
+  let songlistCache = null;
 
   // ===== DOM Refs =====
   const $loginPage = document.getElementById('loginPage');
@@ -351,7 +406,7 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
     if (existing) {
       const { data, error } = await supabase
         .from('schedule_days')
-        .update({ hours: dayObj.hours, is_host: dayObj.isHost, prestore: dayObj.prestore, used_prestore: dayObj.usedPrestore })
+        .update({ hours: dayObj.hours, is_host: dayObj.isHost, prestore: dayObj.prestore, used_prestore: dayObj.usedPrestore, solo_hours: dayObj.soloHours || 0 })
         .eq('id', existing.id)
         .select()
         .single();
@@ -363,7 +418,7 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
     } else {
       const { data, error } = await supabase
         .from('schedule_days')
-        .insert({ year_month: ym, day: day, hours: dayObj.hours, is_host: dayObj.isHost, prestore: dayObj.prestore, used_prestore: dayObj.usedPrestore })
+        .insert({ year_month: ym, day: day, hours: dayObj.hours, is_host: dayObj.isHost, prestore: dayObj.prestore, used_prestore: dayObj.usedPrestore, solo_hours: dayObj.soloHours || 0 })
         .select()
         .single();
       if (error) { toast('保存失败: ' + error.message, true); return null; }
@@ -423,6 +478,42 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
       .single();
     if (error) { toast('更新预存失败: ' + error.message, true); return; }
     prestoreCache = data;
+  }
+
+  async function fetchSonglist() {
+    if (songlistCache) return songlistCache;
+    const { data, error } = await supabase
+      .from('songlist_balance')
+      .select('*')
+      .limit(1)
+      .single();
+    if (error && error.code === 'PGRST116') {
+      const { data: newRow, error: insertErr } = await supabase
+        .from('songlist_balance')
+        .insert({ balance: 0, history: [] })
+        .select()
+        .single();
+      if (insertErr) { toast('初始化歌单数据失败', true); return { balance: 0, history: [] }; }
+      songlistCache = newRow;
+      return songlistCache;
+    }
+    if (error) { toast('加载歌单数据失败: ' + error.message, true); return { balance: 0, history: [] }; }
+    songlistCache = data;
+    return songlistCache;
+  }
+
+  async function updateSonglist(newBalance, historyEntry) {
+    const sl = await fetchSonglist();
+    const newHistory = [...(sl.history || [])];
+    if (historyEntry) newHistory.push(historyEntry);
+    const { data, error } = await supabase
+      .from('songlist_balance')
+      .update({ balance: newBalance, history: newHistory })
+      .eq('id', sl.id)
+      .select()
+      .single();
+    if (error) { toast('更新歌单余额失败: ' + error.message, true); return; }
+    songlistCache = data;
   }
 
   // ===== Helper: get day data from cache =====
@@ -530,10 +621,12 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
     delete monthDaysCache[ym];
     delete monthMemosCache[ym];
     prestoreCache = null;
+    songlistCache = null;
     await Promise.all([
       fetchMonthDays(curYear, curMonth),
       fetchMonthMemos(curYear, curMonth),
-      fetchPrestore()
+      fetchPrestore(),
+      fetchSonglist()
     ]);
     renderAll();
   }
@@ -543,7 +636,9 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
     const ym = ymKey(curYear, curMonth);
     const days = monthDaysCache[ym] || [];
     const ps = prestoreCache || { balance: 0, history: [] };
+    const sl = songlistCache || { balance: 0, history: [] };
     let totalHours = 0, totalDays = 0, hostCount = 0, monthAdded = 0, monthUsed = 0;
+    let soloHoursTotal = 0, soloDays = 0;
     days.forEach(d => {
       var credited = d.hours + (d.used_prestore || 0);
       if (credited > 0) { totalHours += credited; totalDays++; }
@@ -551,6 +646,8 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
       // 25号（含）起的预存计入下月，不计入本月新增
       if (d.prestore > 0 && d.day < 25) monthAdded += d.prestore;
       if (d.used_prestore > 0) monthUsed += d.used_prestore;
+      // 个播统计
+      if (d.solo_hours > 0) { soloHoursTotal += d.solo_hours; soloDays++; }
     });
     // 还需加上：上月25号起预存到本月的部分
     (function() {
@@ -565,17 +662,20 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
     const pctH = Math.min(100, (totalHours / 88) * 100);
     const pctD = Math.min(100, (totalDays / 22) * 100);
     const pctHost = Math.min(100, (hostCount / 15) * 100);
+    const pctSoloH = Math.min(100, (soloHoursTotal / 88) * 100);
+    const pctSoloD = Math.min(100, (soloDays / 22) * 100);
     document.getElementById('overview').innerHTML =
       '<div class="overview-title">本月概览</div>' +
       '<div class="stat-row"><div class="stat-icon coral">⏱</div><div class="stat-info"><div class="stat-label">计入时长</div><div class="stat-value"><span class="current">' + totalHours + '</span> <span class="target">/ 88h</span></div><div class="progress-wrap"><div class="progress-bar coral" style="width:0" data-w="' + pctH + '%"></div></div></div></div>' +
       '<div class="stat-row"><div class="stat-icon amber">📅</div><div class="stat-info"><div class="stat-label">排档天数</div><div class="stat-value"><span class="current">' + totalDays + '</span> <span class="target">/ 22天</span></div><div class="progress-wrap"><div class="progress-bar amber" style="width:0" data-w="' + pctD + '%"></div></div></div></div>' +
       '<div class="stat-row"><div class="stat-icon green">🎤</div><div class="stat-info"><div class="stat-label">主持人档数</div><div class="stat-value"><span class="current">' + hostCount + '</span> <span class="target">/ 15档</span></div><div class="progress-wrap"><div class="progress-bar green" style="width:0" data-w="' + pctHost + '%"></div></div></div></div>' +
-      '<div class="stat-row"><div class="stat-icon purple">📺</div><div class="stat-info"><div class="stat-label">个人直播</div><div class="stat-value"><span class="current">--</span> <span class="target">(待定)</span></div></div></div>' +
+      '<div class="stat-row"><div class="stat-icon purple">📺</div><div class="stat-info"><div class="stat-label">个播时长</div><div class="stat-value"><span class="current">' + soloHoursTotal + '</span> <span class="target">/ 88h</span></div><div class="progress-wrap"><div class="progress-bar purple" style="width:0" data-w="' + pctSoloH + '%"></div></div><div class="stat-value" style="margin-top:4px"><span class="current">' + soloDays + '</span> <span class="target">/ 22天</span></div><div class="progress-wrap"><div class="progress-bar purple" style="width:0" data-w="' + pctSoloD + '%"></div></div></div></div>' +
       '<div class="stat-row"><div class="stat-icon gold">💰</div><div class="stat-info"><div class="stat-label">预存余额（累计）</div><div class="prestore-badge">💰 ' + ps.balance + 'h</div><div style="margin-top:4px;font-size:0.75rem;display:flex;gap:10px">' +
         (monthAdded > 0 ? '<span class="prestore-add">+' + monthAdded + 'h 新增</span>' : '') +
         (monthUsed > 0 ? '<span class="prestore-use">-' + monthUsed + 'h 使用</span>' : '') +
         (monthAdded === 0 && monthUsed === 0 ? '<span style="color:var(--text-muted)">本月暂无变动</span>' : '') +
-      '</div></div></div>';
+      '</div></div></div>' +
+      '<div class="stat-row" id="songlistStatRow" style="cursor:pointer"><div class="stat-icon purple">🎵</div><div class="stat-info"><div class="stat-label">歌单余额</div><div class="songlist-badge" id="songlistBadgeOverview">🎵 ' + sl.balance + ' 个</div></div></div>';
     requestAnimationFrame(function() {
       setTimeout(function() {
         document.querySelectorAll('.progress-bar[data-w]').forEach(function(bar) {
@@ -583,6 +683,11 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
         });
       }, 80);
     });
+    // Bind songlist stat row click
+    var songlistRow = document.getElementById('songlistStatRow');
+    if (songlistRow) {
+      songlistRow.addEventListener('click', function() { openSonglistModal(); });
+    }
   }
 
   // ===== Render Calendar =====
@@ -625,6 +730,7 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
       }
       if (dayData && dayData.hours > 0 && dayData.prestore > 0) icon += '💰';
       if (dayData && dayData.used_prestore > 0 && icon.indexOf('💰') < 0) icon += '💰';
+      if (dayData && dayData.solo_hours > 0) icon += '📺';
       var cellCredited = dayData ? (dayData.hours + (dayData.used_prestore || 0)) : 0;
       var creditedText = cellCredited > 0 ? ' ' + cellCredited + 'h' : '';
       html += '<div class="' + cls + '" data-day="' + d + '"><div class="cal-date">' + d + '</div><div class="cal-status">' + icon + creditedText + '</div></div>';
@@ -694,6 +800,11 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
     document.getElementById('inputAddPrestore').value = prestore > 0 ? 'yes' : 'no';
     document.getElementById('addPrestoreGroup').style.display = prestore > 0 ? 'block' : 'none';
     document.getElementById('inputPrestore').value = prestore > 0 ? String(prestore) : '1';
+    // 个播
+    var soloH = dayData ? (dayData.solo_hours || 0) : 0;
+    document.getElementById('inputSolo').value = soloH > 0 ? 'yes' : 'no';
+    document.getElementById('soloGroup').style.display = soloH > 0 ? 'block' : 'none';
+    document.getElementById('inputSoloHours').value = soloH > 0 ? String(soloH) : '1';
     updateCreditedDisplay();
     openModal('dayModal');
   }
@@ -718,6 +829,10 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
   document.getElementById('inputAddPrestore').addEventListener('change', function() {
     document.getElementById('addPrestoreGroup').style.display = this.value === 'yes' ? 'block' : 'none';
   });
+  // 个播是/否切换
+  document.getElementById('inputSolo').addEventListener('change', function() {
+    document.getElementById('soloGroup').style.display = this.value === 'yes' ? 'block' : 'none';
+  });
 
   document.getElementById('modalSave').addEventListener('click', async function() {
     var hours = parseInt(document.getElementById('inputHours').value) || 0;
@@ -727,6 +842,7 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
     var newPrestore = document.getElementById('inputAddPrestore').value === 'yes' ? parseInt(document.getElementById('inputPrestore').value) : 0;
     if (newPrestore < 0) newPrestore = 0;
     if (newPrestore > 50) { toast('预存小时数最多 50', true); return; }
+    var soloHours = document.getElementById('inputSolo').value === 'yes' ? parseInt(document.getElementById('inputSoloHours').value) : 0;
 
     var oldDay = getDayFromCache(curYear, curMonth, editingDay);
     var oldNewPrestore = oldDay ? (oldDay.prestore || 0) : 0;
@@ -771,10 +887,10 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
         prestoreCache = psData;
       }
 
-      if (hours === 0 && isHost === 0 && newPrestore === 0 && usePrestoreAmount === 0) {
+      if (hours === 0 && isHost === 0 && newPrestore === 0 && usePrestoreAmount === 0 && soloHours === 0) {
         await deleteDayData(curYear, curMonth, editingDay);
       } else {
-        await upsertDayData(curYear, curMonth, editingDay, { hours: hours, isHost: isHost, prestore: newPrestore, usedPrestore: usePrestoreAmount });
+        await upsertDayData(curYear, curMonth, editingDay, { hours: hours, isHost: isHost, prestore: newPrestore, usedPrestore: usePrestoreAmount, soloHours: soloHours });
       }
     } catch (e) {
       toast('保存异常: ' + e.message, true);
@@ -860,15 +976,17 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
     if (userRole !== 'admin') return;
     showLoading('导出中...');
     try {
-      var [daysRes, memosRes, psRes] = await Promise.all([
+      var [daysRes, memosRes, psRes, slRes] = await Promise.all([
         supabase.from('schedule_days').select('*'),
         supabase.from('host_memos').select('*'),
-        supabase.from('prestore_balance').select('*').limit(1).single()
+        supabase.from('prestore_balance').select('*').limit(1).single(),
+        supabase.from('songlist_balance').select('*').limit(1).single()
       ]);
       var exportData = {
         schedule_days: daysRes.data || [],
         host_memos: memosRes.data || [],
         prestore_balance: psRes.data || { balance: 0, history: [] },
+        songlist_balance: slRes.data || { balance: 0, history: [] },
         exported_at: new Date().toISOString()
       };
       var json = JSON.stringify(exportData, null, 2);
@@ -955,6 +1073,14 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
             .update({ balance: imported.prestore_balance.balance || 0, history: imported.prestore_balance.history || [] })
             .eq('id', ps.id);
         }
+        // Update songlist
+        if (imported.songlist_balance) {
+          var sl = await fetchSonglist();
+          await supabase
+            .from('songlist_balance')
+            .update({ balance: imported.songlist_balance.balance || 0, history: imported.songlist_balance.history || [] })
+            .eq('id', sl.id);
+        }
       } else {
         // Handle old localStorage format (anchor_schedule_YYYY-MM, anchor_prestore)
         await supabase.from('schedule_days').delete().neq('id', 0);
@@ -1008,6 +1134,7 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
       monthDaysCache = {};
       monthMemosCache = {};
       prestoreCache = null;
+      songlistCache = null;
       await loadMonthData();
       closeModal('importModal');
       hideLoading();
@@ -1017,6 +1144,92 @@ select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;backgro
       toast('导入失败: ' + e.message, true);
     }
   });
+
+  // ===== Songlist Modal =====
+  function openSonglistModal() {
+    var sl = songlistCache || { balance: 0, history: [] };
+    document.getElementById('songlistCurrentDisplay').textContent = '🎵 当前余额：' + sl.balance + ' 个';
+    document.getElementById('songlistAddInput').value = '';
+    document.getElementById('songlistUseInput').value = '';
+    document.getElementById('songlistAddNote').value = '';
+    document.getElementById('songlistUseNote').value = '';
+    // Show/hide admin ops
+    var adminOps = document.getElementById('songlistAdminOps');
+    if (userRole === 'admin') {
+      adminOps.style.display = 'block';
+    } else {
+      adminOps.style.display = 'none';
+    }
+    // Render history
+    renderSonglistHistory();
+    openModal('songlistModal');
+  }
+
+  function renderSonglistHistory() {
+    var sl = songlistCache || { balance: 0, history: [] };
+    var history = (sl.history || []).slice(-10).reverse();
+    var el = document.getElementById('songlistHistoryList');
+    if (history.length === 0) {
+      el.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:0.82rem;padding:12px">暂无操作记录</div>';
+      return;
+    }
+    el.innerHTML = history.map(function(h) {
+      var typeLabel = h.type === 'add' ? '新增' : '使用';
+      var typeCls = h.type === 'add' ? 'add' : 'use';
+      var amountStr = h.type === 'add' ? ('+' + h.amount) : ('-' + h.amount);
+      var noteStr = h.note ? '<span class="sh-note">(' + h.note + ')</span>' : '';
+      return '<div class="songlist-history-item">' +
+        '<span class="sh-date">' + (h.date || '') + '</span>' +
+        '<span class="sh-type ' + typeCls + '">' + typeLabel + '</span>' +
+        '<span class="sh-amount">' + amountStr + ' 个' + noteStr + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  document.getElementById('songlistAddBtn').addEventListener('click', async function() {
+    var amount = parseInt(document.getElementById('songlistAddInput').value);
+    if (!amount || amount < 1) { toast('请输入有效数量', true); return; }
+    var note = document.getElementById('songlistAddNote').value.trim();
+    var sl = await fetchSonglist();
+    var newBalance = sl.balance + amount;
+    var today = new Date();
+    var dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    var entry = { date: dateStr, type: 'add', amount: amount };
+    if (note) entry.note = note;
+    showLoading('更新中...');
+    await updateSonglist(newBalance, entry);
+    hideLoading();
+    document.getElementById('songlistCurrentDisplay').textContent = '🎵 当前余额：' + newBalance + ' 个';
+    document.getElementById('songlistAddInput').value = '';
+    document.getElementById('songlistAddNote').value = '';
+    renderSonglistHistory();
+    renderOverview();
+    toast('已新增 ' + amount + ' 个歌单 ✓');
+  });
+
+  document.getElementById('songlistUseBtn').addEventListener('click', async function() {
+    var amount = parseInt(document.getElementById('songlistUseInput').value);
+    if (!amount || amount < 1) { toast('请输入有效数量', true); return; }
+    var sl = await fetchSonglist();
+    if (amount > sl.balance) { toast('使用数量不能超过当前余额（' + sl.balance + ' 个）', true); return; }
+    var newBalance = sl.balance - amount;
+    var today = new Date();
+    var dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    var note = document.getElementById('songlistUseNote').value.trim();
+    var entry = { date: dateStr, type: 'use', amount: amount };
+    if (note) entry.note = note;
+    showLoading('更新中...');
+    await updateSonglist(newBalance, entry);
+    hideLoading();
+    document.getElementById('songlistCurrentDisplay').textContent = '🎵 当前余额：' + newBalance + ' 个';
+    document.getElementById('songlistUseInput').value = '';
+    document.getElementById('songlistUseNote').value = '';
+    renderSonglistHistory();
+    renderOverview();
+    toast('已使用 ' + amount + ' 个歌单 ✓');
+  });
+
+  document.getElementById('songlistClose').addEventListener('click', function() { closeModal('songlistModal'); });
 
   // ===== Close modals on overlay click =====
   document.querySelectorAll('.modal-overlay').forEach(function(ov) {
