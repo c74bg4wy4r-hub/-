@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>主播排班记录</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{--coral:#E8725C;--coral-light:#F09A8A;--coral-glow:rgba(232,114,92,0.25);--amber:#E5A04B;--amber-light:#F0C078;--amber-glow:rgba(229,160,75,0.2);--warm-bg:#FDF6F0;--warm-bg-alt:#FBF0E8;--card-bg:#FFFFFF;--card-border:rgba(232,114,92,0.12);--text-primary:#2D1F14;--text-secondary:#7A6555;--text-muted:#B0A090;--shadow-sm:0 1px 3px rgba(45,31,20,0.06);--shadow-md:0 4px 16px rgba(45,31,20,0.08);--shadow-lg:0 8px 32px rgba(45,31,20,0.12);--shadow-glow:0 4px 20px rgba(232,114,92,0.15);--radius-sm:8px;--radius-md:14px;--radius-lg:20px;--radius-xl:28px;--transition:0.3s cubic-bezier(0.4,0,0.2,1)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:'Outfit','Noto Sans SC',sans-serif;background:var(--warm-bg);color:var(--text-primary);min-height:100vh;overflow-x:hidden;position:relative}
+body::before{content:'';position:fixed;top:-50%;right:-30%;width:80vw;height:80vw;background:radial-gradient(circle,rgba(232,114,92,0.08) 0%,transparent 70%);pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;bottom:-30%;left:-20%;width:60vw;height:60vw;background:radial-gradient(circle,rgba(229,160,75,0.06) 0%,transparent 70%);pointer-events:none;z-index:0}
+.app{max-width:520px;margin:0 auto;padding:16px 16px 100px;position:relative;z-index:1}
+.login-page{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;padding:24px;text-align:center}
+.login-card{background:var(--card-bg);border-radius:var(--radius-xl);padding:36px 28px;box-shadow:var(--shadow-lg);border:1px solid var(--card-border);width:100%;max-width:360px;animation:fadeInUp 0.6s ease both}
+.login-icon{font-size:3rem;margin-bottom:12px}
+.login-title{font-family:'Playfair Display','Noto Sans SC',serif;font-size:1.5rem;font-weight:700;margin-bottom:6px}
+.login-title span{background:linear-gradient(135deg,var(--coral),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.login-subtitle{font-size:0.85rem;color:var(--text-secondary);margin-bottom:24px}
+.login-input{width:100%;padding:14px 16px;border:1.5px solid rgba(45,31,20,0.1);border-radius:var(--radius-md);font-family:inherit;font-size:1rem;color:var(--text-primary);background:var(--warm-bg);transition:var(--transition);outline:none;text-align:center;letter-spacing:0.1em;margin-bottom:12px}
+.login-input:focus{border-color:var(--coral);box-shadow:0 0 0 3px var(--coral-glow)}
+.login-input::placeholder{color:var(--text-muted);letter-spacing:0}
+.login-btn{width:100%;padding:14px;border:none;border-radius:var(--radius-md);background:linear-gradient(135deg,var(--coral),var(--amber));color:white;font-family:inherit;font-size:1rem;font-weight:600;cursor:pointer;transition:var(--transition);box-shadow:var(--shadow-glow);margin-top:4px}
+.login-btn:hover{box-shadow:0 6px 24px rgba(232,114,92,0.3);transform:translateY(-1px)}
+.login-btn:active{transform:scale(0.97)}
+.login-error{color:#D45555;font-size:0.82rem;margin-top:10px;min-height:1.2em}
+.login-role-hint{font-size:0.75rem;color:var(--text-muted);margin-top:16px;line-height:1.5}
+.role-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 14px;border-radius:20px;font-size:0.78rem;font-weight:600;margin-bottom:10px}
+.role-badge.admin{background:rgba(232,114,92,0.12);color:var(--coral)}
+.role-badge.viewer{background:rgba(229,160,75,0.12);color:var(--amber)}
+.logout-btn{position:fixed;top:12px;right:12px;z-index:100;padding:6px 14px;border:1.5px solid var(--card-border);border-radius:20px;background:var(--card-bg);color:var(--text-secondary);font-family:inherit;font-size:0.75rem;font-weight:500;cursor:pointer;transition:var(--transition);box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:4px}
+.logout-btn:hover{border-color:var(--coral);color:var(--coral)}
+.loading-overlay{position:fixed;inset:0;background:rgba(253,246,240,0.85);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s ease}
+.loading-overlay.show{opacity:1;pointer-events:auto}
+.loading-spinner{width:40px;height:40px;border:3px solid rgba(232,114,92,0.15);border-top-color:var(--coral);border-radius:50%;animation:spin 0.8s linear infinite}
+.loading-text{margin-top:14px;font-size:0.85rem;color:var(--text-secondary);font-weight:500}
+@keyframes spin{to{transform:rotate(360deg)}}
+.header{text-align:center;padding:20px 0 8px}
+.header h1{font-family:'Playfair Display','Noto Sans SC',serif;font-size:1.6rem;font-weight:700;color:var(--text-primary);letter-spacing:-0.02em}
+.header h1 span{background:linear-gradient(135deg,var(--coral),var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.month-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:12px}
+.month-nav button{width:36px;height:36px;border:none;border-radius:50%;background:var(--card-bg);color:var(--text-primary);font-size:1.1rem;cursor:pointer;transition:var(--transition);box-shadow:var(--shadow-sm);display:flex;align-items:center;justify-content:center}
+.month-nav button:hover{background:var(--coral);color:white;box-shadow:var(--shadow-glow);transform:scale(1.08)}
+.month-nav button:active{transform:scale(0.95)}
+.month-label{font-size:1.15rem;font-weight:600;min-width:140px;text-align:center}
+.overview{background:var(--card-bg);border-radius:var(--radius-lg);padding:20px;margin-top:16px;box-shadow:var(--shadow-md);border:1px solid var(--card-border);animation:fadeInUp 0.5s ease both;animation-delay:0.1s}
+.overview-title{font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:14px}
+.stat-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.stat-row:last-child{margin-bottom:0}
+.stat-icon{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:0.95rem;flex-shrink:0}
+.stat-icon.coral{background:rgba(232,114,92,0.12)}
+.stat-icon.amber{background:rgba(229,160,75,0.12)}
+.stat-icon.green{background:rgba(92,180,120,0.12)}
+.stat-icon.purple{background:rgba(160,120,200,0.12)}
+.stat-icon.gold{background:rgba(200,170,60,0.12)}
+.stat-info{flex:1;min-width:0}
+.stat-label{font-size:0.75rem;color:var(--text-secondary);font-weight:500;margin-bottom:4px}
+.stat-value{font-size:0.85rem;font-weight:600;color:var(--text-primary)}
+.stat-value .current{font-size:1.15rem;font-weight:700}
+.stat-value .target{color:var(--text-muted);font-weight:400}
+.progress-wrap{width:100%;height:6px;background:rgba(45,31,20,0.06);border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-bar{height:100%;border-radius:3px;transition:width 0.8s cubic-bezier(0.22,1,0.36,1);position:relative;width:0}
+.progress-bar.coral{background:linear-gradient(90deg,var(--coral),var(--coral-light))}
+.progress-bar.amber{background:linear-gradient(90deg,var(--amber),var(--amber-light))}
+.progress-bar.green{background:linear-gradient(90deg,#5CB478,#82D49E)}
+.progress-bar::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.3) 50%,transparent 100%);animation:shimmer 2s ease-in-out infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.prestore-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,rgba(200,170,60,0.12),rgba(229,160,75,0.12));padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:600;color:var(--amber)}
+.prestore-add{color:var(--text-primary);font-weight:700}
+.prestore-use{color:#D45555;font-weight:700}
+.calendar-section{margin-top:16px;animation:fadeInUp 0.5s ease both;animation-delay:0.2s}
+.weekday-row{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.weekday-cell{text-align:center;font-size:0.7rem;font-weight:600;color:var(--text-muted);padding:6px 0;letter-spacing:0.05em}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-cell{aspect-ratio:1;border-radius:var(--radius-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:var(--transition);background:var(--card-bg);border:1.5px solid transparent;box-shadow:var(--shadow-sm);position:relative;min-height:48px;gap:1px}
+.cal-cell:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);border-color:var(--coral-light)}
+.cal-cell:active{transform:scale(0.96)}
+.cal-cell.empty{background:transparent;box-shadow:none;cursor:default;pointer-events:none}
+.cal-cell.today{border-color:var(--coral);box-shadow:0 0 0 2px var(--coral-glow),var(--shadow-md)}
+.cal-cell.has-data{background:linear-gradient(135deg,rgba(232,114,92,0.04),rgba(232,114,92,0.08))}
+.cal-cell.has-host{background:linear-gradient(135deg,rgba(229,160,75,0.06),rgba(229,160,75,0.12))}
+.cal-cell.has-prestore-only{background:linear-gradient(135deg,rgba(200,170,60,0.06),rgba(200,170,60,0.10))}
+.cal-cell.has-memo-only{background:linear-gradient(135deg,rgba(160,120,200,0.04),rgba(160,120,200,0.08))}
+.cal-date{font-size:0.8rem;font-weight:600;color:var(--text-primary);line-height:1}
+.cal-cell.today .cal-date{color:var(--coral)}
+.cal-status{font-size:0.85rem;line-height:1;min-height:1em}
+.viewer-mode .cal-cell[data-day]{cursor:default}
+.viewer-mode .cal-cell[data-day]:hover{transform:none;box-shadow:var(--shadow-sm);border-color:transparent}
+.viewer-mode .cal-cell.today:hover{border-color:var(--coral);box-shadow:0 0 0 2px var(--coral-glow),var(--shadow-md)}
+.memo-section{background:var(--card-bg);border-radius:var(--radius-lg);padding:18px 20px;margin-top:16px;box-shadow:var(--shadow-md);border:1px solid var(--card-border);animation:fadeInUp 0.5s ease both;animation-delay:0.3s}
+.memo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.memo-title{font-size:0.85rem;font-weight:600;color:var(--text-primary);display:flex;align-items:center;gap:6px}
+.memo-add-btn{width:30px;height:30px;border-radius:50%;border:1.5px dashed var(--coral-light);background:transparent;color:var(--coral);font-size:1.1rem;cursor:pointer;transition:var(--transition);display:flex;align-items:center;justify-content:center}
+.memo-add-btn:hover{background:var(--coral);color:white;border-style:solid}
+.memo-list{display:flex;flex-wrap:wrap;gap:6px}
+.memo-tag{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:20px;font-size:0.78rem;font-weight:500;background:rgba(160,120,200,0.08);color:#8060A0;transition:var(--transition)}
+.memo-tag .remove-memo{width:16px;height:16px;border-radius:50%;border:none;background:rgba(160,120,200,0.15);color:#8060A0;font-size:0.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition);margin-left:2px}
+.memo-tag .remove-memo:hover{background:#E85C5C;color:white}
+.memo-empty{font-size:0.78rem;color:var(--text-muted);font-style:italic}
+.toolbar{display:flex;gap:8px;margin-top:16px;justify-content:center;animation:fadeInUp 0.5s ease both;animation-delay:0.4s}
+.tool-btn{flex:1;max-width:180px;padding:12px 16px;border:1.5px solid var(--card-border);border-radius:var(--radius-md);background:var(--card-bg);color:var(--text-secondary);font-family:inherit;font-size:0.82rem;font-weight:500;cursor:pointer;transition:var(--transition);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:var(--shadow-sm)}
+.tool-btn:hover{border-color:var(--coral);color:var(--coral);box-shadow:var(--shadow-md)}
+.tool-btn:active{transform:scale(0.97)}
+.modal-overlay{position:fixed;inset:0;background:rgba(45,31,20,0.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.25s ease}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal-panel{background:var(--card-bg);border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:24px 24px 32px;width:100%;max-width:520px;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.22,1,0.36,1);box-shadow:0 -8px 40px rgba(45,31,20,0.15)}
+.modal-overlay.open .modal-panel{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:rgba(45,31,20,0.15);border-radius:2px;margin:0 auto 18px}
+.modal-date{font-size:1.1rem;font-weight:700;color:var(--text-primary);margin-bottom:20px;text-align:center}
+.form-group{margin-bottom:16px}
+.form-label{font-size:0.78rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;display:block}
+.form-input{width:100%;padding:12px 14px;border:1.5px solid rgba(45,31,20,0.1);border-radius:var(--radius-sm);font-family:inherit;font-size:1rem;color:var(--text-primary);background:var(--warm-bg);transition:var(--transition);outline:none;-webkit-appearance:none}
+.form-input:focus{border-color:var(--coral);box-shadow:0 0 0 3px var(--coral-glow)}
+.form-input::placeholder{color:var(--text-muted)}
+select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%237A6555' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.modal-actions{display:flex;gap:8px;margin-top:24px}
+.btn{flex:1;padding:13px 16px;border:none;border-radius:var(--radius-md);font-family:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;transition:var(--transition)}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:linear-gradient(135deg,var(--coral),var(--amber));color:white;box-shadow:var(--shadow-glow)}
+.btn-primary:hover{box-shadow:0 6px 24px rgba(232,114,92,0.3);transform:translateY(-1px)}
+.btn-secondary{background:var(--warm-bg);color:var(--text-secondary)}
+.btn-secondary:hover{background:var(--warm-bg-alt)}
+.btn-danger{background:transparent;color:#D45555;font-size:0.8rem;padding:10px}
+.btn-danger:hover{background:rgba(212,85,85,0.08)}
+.import-textarea{width:100%;min-height:120px;padding:12px 14px;border:1.5px solid rgba(45,31,20,0.1);border-radius:var(--radius-sm);font-family:'Outfit',monospace;font-size:0.82rem;color:var(--text-primary);background:var(--warm-bg);resize:vertical;outline:none;transition:var(--transition)}
+.import-textarea:focus{border-color:var(--coral);box-shadow:0 0 0 3px var(--coral-glow)}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--text-primary);color:white;padding:10px 20px;border-radius:var(--radius-md);font-size:0.85rem;font-weight:500;z-index:2000;transition:transform 0.4s cubic-bezier(0.22,1,0.36,1);box-shadow:var(--shadow-lg);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{background:#D45555}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(min-width:600px){.app{padding:24px 24px 100px}.header h1{font-size:1.8rem}.cal-cell{min-height:58px}.cal-date{font-size:0.85rem}.cal-status{font-size:0.95rem}}
+@media(max-width:380px){.app{padding:10px 10px 80px}.cal-cell{min-height:42px;border-radius:6px}.cal-date{font-size:0.72rem}.cal-status{font-size:0.78rem}.overview{padding:14px}}
+#importFile{display:none}
+.hidden{display:none!important}
+.credited-display{text-align:center;padding:12px;background:linear-gradient(135deg,rgba(232,114,92,0.08),rgba(229,160,75,0.08));border-radius:var(--radius-md);margin-bottom:8px;font-size:1.1rem;font-weight:700;color:var(--coral)}
+</style>
+</head>
+<body>
+<div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div><div class="loading-text" id="loadingText">加载中...</div></div>
+<div class="app" id="loginPage">
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-icon">🎙️</div>
+      <div class="login-title"><span>主播排班</span>记录</div>
+      <div class="login-subtitle">请输入口令进入系统</div>
+      <input type="text" class="login-input" id="loginPassword" placeholder="输入共享口令" autocomplete="off" style="-webkit-text-security:disc">
+      <input type="text" class="login-input hidden" id="loginAdminPassword" placeholder="输入管理密码（可选，直接点击进入为查看者）" autocomplete="off" style="-webkit-text-security:disc">
+      <button class="login-btn" id="loginBtn">进入</button>
+      <div class="login-error" id="loginError"></div>
+      <div class="login-role-hint">💡 输入共享口令查看排班<br>管理员请继续输入管理密码</div>
+    </div>
+  </div>
+</div>
+<div class="app hidden" id="mainApp">
+  <button class="logout-btn" id="logoutBtn">🔓 退出</button>
+  <div class="header">
+    <h1>🎙️ <span>主播排班</span>记录</h1>
+    <div style="text-align:center;margin-top:6px"><span class="role-badge" id="roleBadge"></span></div>
+    <div class="month-nav">
+      <button id="prevMonth" aria-label="上月">‹</button>
+      <div class="month-label" id="monthLabel"></div>
+      <button id="nextMonth" aria-label="下月">›</button>
+    </div>
+  </div>
+  <div class="overview" id="overview"></div>
+  <div class="calendar-section" id="calendarSection">
+    <div class="weekday-row">
+      <div class="weekday-cell">一</div><div class="weekday-cell">二</div><div class="weekday-cell">三</div><div class="weekday-cell">四</div><div class="weekday-cell">五</div><div class="weekday-cell">六</div><div class="weekday-cell">日</div>
+    </div>
+    <div class="calendar-grid" id="calGrid"></div>
+  </div>
+  <div class="memo-section">
+    <div class="memo-header">
+      <div class="memo-title">📋 主持人排班备忘</div>
+      <button class="memo-add-btn hidden" id="memoAddBtn" aria-label="添加备忘">+</button>
+    </div>
+    <div class="memo-list" id="memoList"></div>
+  </div>
+  <div class="toolbar hidden" id="toolbar">
+    <button class="tool-btn" id="exportBtn">📤 导出数据</button>
+    <button class="tool-btn" id="importBtn">📥 导入数据</button>
+  </div>
+  <input type="file" id="importFile" accept=".json">
+</div>
+<div class="modal-overlay" id="dayModal"><div class="modal-panel"><div class="modal-handle"></div><div class="modal-date" id="modalDate"></div>
+  <div class="form-group"><label class="form-label">⏱ 实际上班时长</label><select class="form-input" id="inputHours"><option value="0">未上班</option><option value="1">1 小时</option><option value="2">2 小时</option><option value="3">3 小时</option><option value="4">4 小时</option><option value="5">5 小时</option><option value="6">6 小时</option><option value="7">7 小时</option><option value="8">8 小时</option></select></div>
+  <div class="form-group">
+    <label class="form-label">🎤 是否担任主持人</label>
+    <select class="form-input" id="inputHost"><option value="no">否</option><option value="yes">是</option></select>
+    <div id="hostCountGroup" style="display:none;margin-top:8px">
+      <label class="form-label" style="font-size:0.82rem;color:var(--text-muted)">主持档数</label>
+      <select class="form-input" id="inputHostCount">
+        <option value="1">1 档</option><option value="2">2 档</option><option value="3">3 档</option><option value="4">4 档</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">💰 是否使用预存抵扣</label>
+    <select class="form-input" id="inputUsePrestore"><option value="no">否</option><option value="yes">是</option></select>
+    <div id="usePrestoreGroup" style="display:none;margin-top:8px">
+      <label class="form-label" style="font-size:0.82rem;color:var(--text-muted)">抵扣小时数</label>
+      <select class="form-input" id="inputUsePrestoreAmount">
+        <option value="1">1 小时</option><option value="2">2 小时</option><option value="3">3 小时</option><option value="4">4 小时</option><option value="5">5 小时</option><option value="6">6 小时</option><option value="7">7 小时</option><option value="8">8 小时</option><option value="9">9 小时</option><option value="10">10 小时</option>
+      </select>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">用预存小时补差</div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">🏦 是否新增预存</label>
+    <select class="form-input" id="inputAddPrestore"><option value="no">否</option><option value="yes">是</option></select>
+    <div id="addPrestoreGroup" style="display:none;margin-top:8px">
+      <label class="form-label" style="font-size:0.82rem;color:var(--text-muted)">预存小时数</label>
+      <select class="form-input" id="inputPrestore">
+        <option value="1">1 小时</option><option value="2">2 小时</option><option value="3">3 小时</option><option value="4">4 小时</option><option value="5">5 小时</option><option value="6">6 小时</option><option value="7">7 小时</option><option value="8">8 小时</option><option value="9">9 小时</option><option value="10">10 小时</option>
+      </select>
+      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">每月25日起预存计入下月</div>
+    </div>
+  </div>
+  <div class="credited-display" id="creditedDisplay">📊 计入时长 = 0 小时</div>
+  <div class="modal-actions"><button class="btn btn-secondary" id="modalCancel">取消</button><button class="btn btn-primary" id="modalSave">保存</button></div>
+  <div style="text-align:center;margin-top:8px"><button class="btn btn-danger" id="modalClear">清除当天记录</button></div>
+</div></div>
+<div class="modal-overlay" id="memoModal"><div class="modal-panel"><div class="modal-handle"></div><div class="modal-date">添加主持人备忘日期</div>
+  <div class="form-group"><label class="form-label">输入日期（本月几号）</label><input type="number" class="form-input" id="memoInput" min="1" max="31" step="1" placeholder="例如 8" style="text-align:center;font-size:1.2rem;font-weight:600"></div>
+  <div class="modal-actions"><button class="btn btn-secondary" id="memoCancel">取消</button><button class="btn btn-primary" id="memoSaveBtn">添加</button></div>
+</div></div>
+<div class="modal-overlay" id="importModal"><div class="modal-panel"><div class="modal-handle"></div><div class="modal-date">导入数据</div>
+  <div class="form-group"><label class="form-label">粘贴 JSON 数据，或选择文件导入</label><textarea class="import-textarea" id="importTextarea" placeholder="粘贴导出的 JSON 内容..."></textarea></div>
+  <div class="modal-actions"><button class="btn btn-secondary" id="importCancel">取消</button><button class="tool-btn" id="importFileBtn" style="flex:none;max-width:none">📁 选择文件</button><button class="btn btn-primary" id="importConfirm">导入</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  // ===== Supabase Config =====
+  const SUPABASE_URL = 'https://psgdxsbgubnadllftlwi.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzZ2R4c2JndWJuYWRsbGZ0bHdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTI2MDcsImV4cCI6MjA5MjYyODYwN30.u6QKxyNjSFuYDmxLZaiDrklVPwHiCHMw8xWBV-WwlfQ';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ===== Auth Constants =====
+  const SHARED_PASSWORD = '甜菜';
+  const ADMIN_PASSWORD = '甜菜管理';
+
+  // ===== State =====
+  const now = new Date();
+  let curYear = now.getFullYear();
+  let curMonth = now.getMonth();
+  let editingDay = null;
+  let userRole = null; // 'admin' or 'viewer'
+  let monthDaysCache = {}; // { "2026-04": [{...}] }
+  let monthMemosCache = {};
+  let prestoreCache = null;
+
+  // ===== DOM Refs =====
+  const $loginPage = document.getElementById('loginPage');
+  const $mainApp = document.getElementById('mainApp');
+  const $loginPassword = document.getElementById('loginPassword');
+  const $loginAdminPassword = document.getElementById('loginAdminPassword');
+  const $loginBtn = document.getElementById('loginBtn');
+  const $loginError = document.getElementById('loginError');
+  const $logoutBtn = document.getElementById('logoutBtn');
+  const $roleBadge = document.getElementById('roleBadge');
+  const $memoAddBtn = document.getElementById('memoAddBtn');
+  const $toolbar = document.getElementById('toolbar');
+  const $calendarSection = document.getElementById('calendarSection');
+  const $loadingOverlay = document.getElementById('loadingOverlay');
+  const $loadingText = document.getElementById('loadingText');
+
+  // ===== Loading =====
+  function showLoading(text) {
+    $loadingText.textContent = text || '加载中...';
+    $loadingOverlay.classList.add('show');
+  }
+  function hideLoading() {
+    $loadingOverlay.classList.remove('show');
+  }
+
+  // ===== Toast =====
+  function toast(msg, isError) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (isError ? ' error' : '');
+    setTimeout(() => { el.className = 'toast'; }, 2500);
+  }
+
+  // ===== Modal =====
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  // ===== Helper: year_month key =====
+  function ymKey(y, m) { return y + '-' + String(m + 1).padStart(2, '0'); }
+
+  // ===== Supabase Data Layer =====
+  async function fetchMonthDays(y, m) {
+    const ym = ymKey(y, m);
+    if (monthDaysCache[ym]) return monthDaysCache[ym];
+    const { data, error } = await supabase
+      .from('schedule_days')
+      .select('*')
+      .eq('year_month', ym);
+    if (error) { toast('加载排班数据失败: ' + error.message, true); return []; }
+    monthDaysCache[ym] = data || [];
+    return monthDaysCache[ym];
+  }
+
+  async function fetchMonthMemos(y, m) {
+    const ym = ymKey(y, m);
+    if (monthMemosCache[ym]) return monthMemosCache[ym];
+    const { data, error } = await supabase
+      .from('host_memos')
+      .select('*')
+      .eq('year_month', ym);
+    if (error) { toast('加载备忘数据失败: ' + error.message, true); return []; }
+    monthMemosCache[ym] = data || [];
+    return monthMemosCache[ym];
+  }
+
+  async function fetchPrestore() {
+    if (prestoreCache) return prestoreCache;
+    const { data, error } = await supabase
+      .from('prestore_balance')
+      .select('*')
+      .limit(1)
+      .single();
+    if (error && error.code === 'PGRST116') {
+      // No row exists yet, create initial
+      const { data: newRow, error: insertErr } = await supabase
+        .from('prestore_balance')
+        .insert({ balance: 0, history: [] })
+        .select()
+        .single();
+      if (insertErr) { toast('初始化预存数据失败', true); return { balance: 0, history: [] }; }
+      prestoreCache = newRow;
+      return prestoreCache;
+    }
+    if (error) { toast('加载预存数据失败: ' + error.message, true); return { balance: 0, history: [] }; }
+    prestoreCache = data;
+    return prestoreCache;
+  }
+
+  async function upsertDayData(y, m, day, dayObj) {
+    const ym = ymKey(y, m);
+    // Check if row exists
+    const existing = (monthDaysCache[ym] || []).find(r => r.day === day);
+    let result;
+    if (existing) {
+      const { data, error } = await supabase
+        .from('schedule_days')
+        .update({ hours: dayObj.hours, is_host: dayObj.isHost, prestore: dayObj.prestore, used_prestore: dayObj.usedPrestore })
+        .eq('id', existing.id)
+        .select()
+        .single();
+      if (error) { toast('保存失败: ' + error.message, true); return null; }
+      result = data;
+      // Update cache
+      const idx = monthDaysCache[ym].findIndex(r => r.id === existing.id);
+      if (idx >= 0) monthDaysCache[ym][idx] = result;
+    } else {
+      const { data, error } = await supabase
+        .from('schedule_days')
+        .insert({ year_month: ym, day: day, hours: dayObj.hours, is_host: dayObj.isHost, prestore: dayObj.prestore, used_prestore: dayObj.usedPrestore })
+        .select()
+        .single();
+      if (error) { toast('保存失败: ' + error.message, true); return null; }
+      result = data;
+      if (!monthDaysCache[ym]) monthDaysCache[ym] = [];
+      monthDaysCache[ym].push(result);
+    }
+    return result;
+  }
+
+  async function deleteDayData(y, m, day) {
+    const ym = ymKey(y, m);
+    const existing = (monthDaysCache[ym] || []).find(r => r.day === day);
+    if (!existing) return;
+    const { error } = await supabase
+      .from('schedule_days')
+      .delete()
+      .eq('id', existing.id);
+    if (error) { toast('删除失败: ' + error.message, true); return; }
+    monthDaysCache[ym] = (monthDaysCache[ym] || []).filter(r => r.id !== existing.id);
+  }
+
+  async function addMemo(y, m, day) {
+    const ym = ymKey(y, m);
+    const { data, error } = await supabase
+      .from('host_memos')
+      .insert({ year_month: ym, day: day })
+      .select()
+      .single();
+    if (error) { toast('添加备忘失败: ' + error.message, true); return null; }
+    if (!monthMemosCache[ym]) monthMemosCache[ym] = [];
+    monthMemosCache[ym].push(data);
+    return data;
+  }
+
+  async function removeMemo(y, m, day) {
+    const ym = ymKey(y, m);
+    const existing = (monthMemosCache[ym] || []).find(r => r.day === day);
+    if (!existing) return;
+    const { error } = await supabase
+      .from('host_memos')
+      .delete()
+      .eq('id', existing.id);
+    if (error) { toast('删除备忘失败: ' + error.message, true); return; }
+    monthMemosCache[ym] = (monthMemosCache[ym] || []).filter(r => r.id !== existing.id);
+  }
+
+  async function updatePrestore(newBalance, historyEntry) {
+    const ps = await fetchPrestore();
+    const newHistory = [...(ps.history || [])];
+    if (historyEntry) newHistory.push(historyEntry);
+    const { data, error } = await supabase
+      .from('prestore_balance')
+      .update({ balance: newBalance, history: newHistory })
+      .eq('id', ps.id)
+      .select()
+      .single();
+    if (error) { toast('更新预存失败: ' + error.message, true); return; }
+    prestoreCache = data;
+  }
+
+  // ===== Helper: get day data from cache =====
+  function getDayFromCache(y, m, day) {
+    const ym = ymKey(y, m);
+    const rows = monthDaysCache[ym] || [];
+    return rows.find(r => r.day === day) || null;
+  }
+  function getMemoDaysFromCache(y, m) {
+    const ym = ymKey(y, m);
+    return (monthMemosCache[ym] || []).map(r => r.day);
+  }
+
+  // ===== Login Logic =====
+  function checkSavedLogin() {
+    const saved = localStorage.getItem('anchor_schedule_role');
+    if (saved === 'admin' || saved === 'viewer') {
+      userRole = saved;
+      return true;
+    }
+    return false;
+  }
+
+  $loginPassword.addEventListener('input', function() {
+    if (this.value === SHARED_PASSWORD) {
+      $loginAdminPassword.classList.remove('hidden');
+      $loginError.textContent = '';
+    } else {
+      $loginAdminPassword.classList.add('hidden');
+      $loginAdminPassword.value = '';
+    }
+  });
+
+  $loginPassword.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      if (this.value === SHARED_PASSWORD && $loginAdminPassword.classList.contains('hidden') === false) {
+        $loginAdminPassword.focus();
+      } else {
+        doLogin();
+      }
+    }
+  });
+  $loginAdminPassword.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+  $loginBtn.addEventListener('click', doLogin);
+
+  function doLogin() {
+    const pwd = $loginPassword.value.trim();
+    const adminPwd = $loginAdminPassword.value.trim();
+    if (pwd !== SHARED_PASSWORD) {
+      $loginError.textContent = '口令错误，请重试';
+      return;
+    }
+    if (adminPwd === ADMIN_PASSWORD) {
+      userRole = 'admin';
+    } else if (adminPwd === '') {
+      userRole = 'viewer';
+    } else {
+      $loginError.textContent = '管理密码错误';
+      return;
+    }
+    localStorage.setItem('anchor_schedule_role', userRole);
+    enterApp();
+  }
+
+  $logoutBtn.addEventListener('click', function() {
+    localStorage.removeItem('anchor_schedule_role');
+    userRole = null;
+    $mainApp.classList.add('hidden');
+    $loginPage.classList.remove('hidden');
+    $loginPassword.value = '';
+    $loginAdminPassword.value = '';
+    $loginAdminPassword.classList.add('hidden');
+    $loginError.textContent = '';
+  });
+
+  async function enterApp() {
+    $loginPage.classList.add('hidden');
+    $mainApp.classList.remove('hidden');
+    // Setup role UI
+    if (userRole === 'admin') {
+      $roleBadge.className = 'role-badge admin';
+      $roleBadge.textContent = '👑 管理员';
+      $memoAddBtn.classList.remove('hidden');
+      $toolbar.classList.remove('hidden');
+      $calendarSection.classList.remove('viewer-mode');
+    } else {
+      $roleBadge.className = 'role-badge viewer';
+      $roleBadge.textContent = '👀 查看模式';
+      $memoAddBtn.classList.add('hidden');
+      $toolbar.classList.add('hidden');
+      $calendarSection.classList.add('viewer-mode');
+    }
+    showLoading('正在加载数据...');
+    try {
+      await loadMonthData();
+    } catch (e) {
+      toast('数据加载异常，请检查网络', true);
+    }
+    hideLoading();
+  }
+
+  async function loadMonthData() {
+    const ym = ymKey(curYear, curMonth);
+    // Clear cache for this month to force reload
+    delete monthDaysCache[ym];
+    delete monthMemosCache[ym];
+    prestoreCache = null;
+    await Promise.all([
+      fetchMonthDays(curYear, curMonth),
+      fetchMonthMemos(curYear, curMonth),
+      fetchPrestore()
+    ]);
+    renderAll();
+  }
+
+  // ===== Render Overview =====
+  function renderOverview() {
+    const ym = ymKey(curYear, curMonth);
+    const days = monthDaysCache[ym] || [];
+    const ps = prestoreCache || { balance: 0, history: [] };
+    let totalHours = 0, totalDays = 0, hostCount = 0, monthAdded = 0, monthUsed = 0;
+    days.forEach(d => {
+      var credited = d.hours + (d.used_prestore || 0);
+      if (credited > 0) { totalHours += credited; totalDays++; }
+      if (d.is_host) hostCount += (typeof d.is_host === 'number' && d.is_host > 0 ? d.is_host : 1);
+      // 25号（含）起的预存计入下月，不计入本月新增
+      if (d.prestore > 0 && d.day < 25) monthAdded += d.prestore;
+      if (d.used_prestore > 0) monthUsed += d.used_prestore;
+    });
+    // 还需加上：上月25号起预存到本月的部分
+    (function() {
+      var prevM = curMonth - 1, prevY = curYear;
+      if (prevM < 0) { prevM = 11; prevY--; }
+      var prevYm = ymKey(prevY, prevM);
+      var prevDays = monthDaysCache[prevYm] || [];
+      prevDays.forEach(function(d) {
+        if (d.prestore > 0 && d.day >= 25) monthAdded += d.prestore;
+      });
+    })();
+    const pctH = Math.min(100, (totalHours / 88) * 100);
+    const pctD = Math.min(100, (totalDays / 22) * 100);
+    const pctHost = Math.min(100, (hostCount / 15) * 100);
+    document.getElementById('overview').innerHTML =
+      '<div class="overview-title">本月概览</div>' +
+      '<div class="stat-row"><div class="stat-icon coral">⏱</div><div class="stat-info"><div class="stat-label">计入时长</div><div class="stat-value"><span class="current">' + totalHours + '</span> <span class="target">/ 88h</span></div><div class="progress-wrap"><div class="progress-bar coral" style="width:0" data-w="' + pctH + '%"></div></div></div></div>' +
+      '<div class="stat-row"><div class="stat-icon amber">📅</div><div class="stat-info"><div class="stat-label">排档天数</div><div class="stat-value"><span class="current">' + totalDays + '</span> <span class="target">/ 22天</span></div><div class="progress-wrap"><div class="progress-bar amber" style="width:0" data-w="' + pctD + '%"></div></div></div></div>' +
+      '<div class="stat-row"><div class="stat-icon green">🎤</div><div class="stat-info"><div class="stat-label">主持人档数</div><div class="stat-value"><span class="current">' + hostCount + '</span> <span class="target">/ 15档</span></div><div class="progress-wrap"><div class="progress-bar green" style="width:0" data-w="' + pctHost + '%"></div></div></div></div>' +
+      '<div class="stat-row"><div class="stat-icon purple">📺</div><div class="stat-info"><div class="stat-label">个人直播</div><div class="stat-value"><span class="current">--</span> <span class="target">(待定)</span></div></div></div>' +
+      '<div class="stat-row"><div class="stat-icon gold">💰</div><div class="stat-info"><div class="stat-label">预存余额（累计）</div><div class="prestore-badge">💰 ' + ps.balance + 'h</div><div style="margin-top:4px;font-size:0.75rem;display:flex;gap:10px">' +
+        (monthAdded > 0 ? '<span class="prestore-add">+' + monthAdded + 'h 新增</span>' : '') +
+        (monthUsed > 0 ? '<span class="prestore-use">-' + monthUsed + 'h 使用</span>' : '') +
+        (monthAdded === 0 && monthUsed === 0 ? '<span style="color:var(--text-muted)">本月暂无变动</span>' : '') +
+      '</div></div></div>';
+    requestAnimationFrame(function() {
+      setTimeout(function() {
+        document.querySelectorAll('.progress-bar[data-w]').forEach(function(bar) {
+          bar.style.width = bar.getAttribute('data-w');
+        });
+      }, 80);
+    });
+  }
+
+  // ===== Render Calendar =====
+  function renderCalendar() {
+    const ym = ymKey(curYear, curMonth);
+    const days = monthDaysCache[ym] || [];
+    const memoDays = getMemoDaysFromCache(curYear, curMonth);
+    const firstDay = new Date(curYear, curMonth, 1);
+    const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+    let startWeekday = firstDay.getDay() - 1;
+    if (startWeekday < 0) startWeekday = 6;
+    const today = new Date();
+    const isCurrentMonth = (curYear === today.getFullYear() && curMonth === today.getMonth());
+    const todayDate = today.getDate();
+    // Build day lookup
+    const dayMap = {};
+    days.forEach(function(d) { dayMap[d.day] = d; });
+
+    var html = '';
+    for (var i = 0; i < startWeekday; i++) {
+      html += '<div class="cal-cell empty"></div>';
+    }
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dayData = dayMap[d];
+      var isMemo = memoDays.includes(d);
+      var cls = 'cal-cell';
+      var icon = '';
+      if (isCurrentMonth && d === todayDate) cls += ' today';
+      var hostVal = dayData ? (dayData.is_host || 0) : 0;
+      if (hostVal === true) hostVal = 1;
+      if (hostVal === false) hostVal = 0;
+      if (dayData && dayData.hours > 0 && hostVal > 0) {
+        cls += ' has-host'; icon = hostVal > 1 ? '🎤×' + hostVal : '🎤';
+      } else if (dayData && dayData.hours > 0) {
+        cls += ' has-data'; icon = '✅';
+      } else if (dayData && dayData.prestore > 0) {
+        cls += ' has-prestore-only'; icon = '💰';
+      } else if (isMemo) {
+        cls += ' has-memo-only'; icon = '📋';
+      }
+      if (dayData && dayData.hours > 0 && dayData.prestore > 0) icon += '💰';
+      if (dayData && dayData.used_prestore > 0 && icon.indexOf('💰') < 0) icon += '💰';
+      var cellCredited = dayData ? (dayData.hours + (dayData.used_prestore || 0)) : 0;
+      var creditedText = cellCredited > 0 ? ' ' + cellCredited + 'h' : '';
+      html += '<div class="' + cls + '" data-day="' + d + '"><div class="cal-date">' + d + '</div><div class="cal-status">' + icon + creditedText + '</div></div>';
+    }
+    document.getElementById('calGrid').innerHTML = html;
+    // Only bind clicks for admin
+    if (userRole === 'admin') {
+      document.querySelectorAll('.cal-cell[data-day]').forEach(function(cell) {
+        cell.addEventListener('click', function() { openDayEditor(parseInt(cell.dataset.day)); });
+      });
+    }
+  }
+
+  // ===== Render Memo =====
+  function renderMemo() {
+    var memoDays = getMemoDaysFromCache(curYear, curMonth).sort(function(a, b) { return a - b; });
+    var el = document.getElementById('memoList');
+    if (memoDays.length === 0) {
+      el.innerHTML = '<div class="memo-empty">暂无备忘' + (userRole === 'admin' ? '，点击 + 添加' : '') + '</div>';
+      return;
+    }
+    if (userRole === 'admin') {
+      el.innerHTML = memoDays.map(function(d) {
+        return '<div class="memo-tag">' + (curMonth + 1) + '月' + d + '日 🎤<button class="remove-memo" data-d="' + d + '">✕</button></div>';
+      }).join('');
+      el.querySelectorAll('.remove-memo').forEach(function(btn) {
+        btn.addEventListener('click', async function(e) {
+          e.stopPropagation();
+          var day = parseInt(btn.dataset.d);
+          showLoading('删除中...');
+          await removeMemo(curYear, curMonth, day);
+          hideLoading();
+          renderCalendar();
+          renderMemo();
+          toast('已移除 ' + (curMonth + 1) + '月' + day + '日 备忘');
+        });
+      });
+    } else {
+      el.innerHTML = memoDays.map(function(d) {
+        return '<div class="memo-tag">' + (curMonth + 1) + '月' + d + '日 🎤</div>';
+      }).join('');
+    }
+  }
+
+  // ===== Day Editor (admin only) =====
+  function openDayEditor(day) {
+    if (userRole !== 'admin') return;
+    editingDay = day;
+    var dayData = getDayFromCache(curYear, curMonth, day);
+    var hours = dayData ? dayData.hours : 0;
+    var hostVal = dayData ? (dayData.is_host || 0) : 0;
+    if (hostVal === true) hostVal = 1;
+    if (hostVal === false) hostVal = 0;
+    var prestore = dayData ? (dayData.prestore || 0) : 0;
+    var usedPrestore = dayData ? (dayData.used_prestore || 0) : 0;
+    document.getElementById('modalDate').textContent = curYear + '年' + (curMonth + 1) + '月' + day + '日';
+    document.getElementById('inputHours').value = String(hours || 0);
+    // 主持人
+    document.getElementById('inputHost').value = hostVal > 0 ? 'yes' : 'no';
+    document.getElementById('inputHostCount').value = hostVal > 0 ? String(hostVal) : '1';
+    document.getElementById('hostCountGroup').style.display = hostVal > 0 ? 'block' : 'none';
+    // 预存抵扣
+    document.getElementById('inputUsePrestore').value = usedPrestore > 0 ? 'yes' : 'no';
+    document.getElementById('usePrestoreGroup').style.display = usedPrestore > 0 ? 'block' : 'none';
+    document.getElementById('inputUsePrestoreAmount').value = usedPrestore > 0 ? String(usedPrestore) : '1';
+    // 新增预存
+    document.getElementById('inputAddPrestore').value = prestore > 0 ? 'yes' : 'no';
+    document.getElementById('addPrestoreGroup').style.display = prestore > 0 ? 'block' : 'none';
+    document.getElementById('inputPrestore').value = prestore > 0 ? String(prestore) : '1';
+    updateCreditedDisplay();
+    openModal('dayModal');
+  }
+
+  function updateCreditedDisplay() {
+    var h = parseInt(document.getElementById('inputHours').value) || 0;
+    var u = document.getElementById('inputUsePrestore').value === 'yes' ? (parseInt(document.getElementById('inputUsePrestoreAmount').value) || 0) : 0;
+    document.getElementById('creditedDisplay').textContent = '📊 计入时长 = ' + (h + u) + ' 小时';
+  }
+  document.getElementById('inputHours').addEventListener('change', updateCreditedDisplay);
+  document.getElementById('inputUsePrestoreAmount').addEventListener('change', updateCreditedDisplay);
+  // 主持人是/否切换
+  document.getElementById('inputHost').addEventListener('change', function() {
+    document.getElementById('hostCountGroup').style.display = this.value === 'yes' ? 'block' : 'none';
+  });
+  // 预存抵扣是/否切换
+  document.getElementById('inputUsePrestore').addEventListener('change', function() {
+    document.getElementById('usePrestoreGroup').style.display = this.value === 'yes' ? 'block' : 'none';
+    updateCreditedDisplay();
+  });
+  // 新增预存是/否切换
+  document.getElementById('inputAddPrestore').addEventListener('change', function() {
+    document.getElementById('addPrestoreGroup').style.display = this.value === 'yes' ? 'block' : 'none';
+  });
+
+  document.getElementById('modalSave').addEventListener('click', async function() {
+    var hours = parseInt(document.getElementById('inputHours').value) || 0;
+    var isHost = document.getElementById('inputHost').value === 'yes' ? parseInt(document.getElementById('inputHostCount').value) : 0;
+    var usePrestoreAmount = document.getElementById('inputUsePrestore').value === 'yes' ? parseInt(document.getElementById('inputUsePrestoreAmount').value) : 0;
+    if (usePrestoreAmount < 0) usePrestoreAmount = 0;
+    var newPrestore = document.getElementById('inputAddPrestore').value === 'yes' ? parseInt(document.getElementById('inputPrestore').value) : 0;
+    if (newPrestore < 0) newPrestore = 0;
+    if (newPrestore > 50) { toast('预存小时数最多 50', true); return; }
+
+    var oldDay = getDayFromCache(curYear, curMonth, editingDay);
+    var oldNewPrestore = oldDay ? (oldDay.prestore || 0) : 0;
+    var oldUsed = oldDay ? (oldDay.used_prestore || 0) : 0;
+
+    // 验证预存抵扣不能超过预存余额
+    var ps0 = await fetchPrestore();
+    var availableBalance = ps0.balance + newPrestore - oldNewPrestore + oldUsed;
+    if (usePrestoreAmount > availableBalance) {
+      toast('预存抵扣不能超过预存余额（当前可用 ' + availableBalance + 'h）', true);
+      return;
+    }
+
+    var prestoreDiff = (newPrestore - oldNewPrestore) - (usePrestoreAmount - oldUsed);
+
+    showLoading('保存中...');
+    try {
+      if (prestoreDiff !== 0) {
+        var ps = await fetchPrestore();
+        var newBalance = ps.balance + prestoreDiff;
+        var dateStr = curYear + '-' + String(curMonth + 1).padStart(2, '0') + '-' + String(editingDay).padStart(2, '0');
+        // 25号（含）起预存归属下个月
+        var belongsM = curMonth, belongsY = curYear;
+        if (editingDay >= 25) { belongsM++; if (belongsM > 11) { belongsM = 0; belongsY++; } }
+        var belongsMonth = belongsY + '-' + String(belongsM + 1).padStart(2, '0');
+        var historyEntries = [];
+        if (newPrestore !== oldNewPrestore) {
+          historyEntries.push({ date: dateStr, amount: newPrestore - oldNewPrestore, type: newPrestore > oldNewPrestore ? 'add' : 'adjust', belongs: belongsMonth });
+        }
+        if (usePrestoreAmount !== oldUsed) {
+          historyEntries.push({ date: dateStr, amount: -(usePrestoreAmount - oldUsed), type: 'use', belongs: belongsMonth });
+        }
+        // Update prestore with all history entries
+        var newHistory = [...(ps.history || []), ...historyEntries];
+        var { data: psData, error: psErr } = await supabase
+          .from('prestore_balance')
+          .update({ balance: newBalance, history: newHistory })
+          .eq('id', ps.id)
+          .select()
+          .single();
+        if (psErr) { toast('更新预存失败: ' + psErr.message, true); hideLoading(); return; }
+        prestoreCache = psData;
+      }
+
+      if (hours === 0 && isHost === 0 && newPrestore === 0 && usePrestoreAmount === 0) {
+        await deleteDayData(curYear, curMonth, editingDay);
+      } else {
+        await upsertDayData(curYear, curMonth, editingDay, { hours: hours, isHost: isHost, prestore: newPrestore, usedPrestore: usePrestoreAmount });
+      }
+    } catch (e) {
+      toast('保存异常: ' + e.message, true);
+      hideLoading();
+      return;
+    }
+    hideLoading();
+    closeModal('dayModal');
+    renderAll();
+    toast('已保存 ✓');
+  });
+
+  document.getElementById('modalCancel').addEventListener('click', function() { closeModal('dayModal'); });
+
+  document.getElementById('modalClear').addEventListener('click', async function() {
+    var oldDay = getDayFromCache(curYear, curMonth, editingDay);
+    var oldPrestore = oldDay ? (oldDay.prestore || 0) : 0;
+    var oldUsed = oldDay ? (oldDay.used_prestore || 0) : 0;
+    var netRevert = -(oldPrestore - oldUsed);
+
+    showLoading('清除中...');
+    try {
+      if (netRevert !== 0) {
+        var ps = await fetchPrestore();
+        var newBalance = ps.balance + netRevert;
+        var dateStr = curYear + '-' + String(curMonth + 1).padStart(2, '0') + '-' + String(editingDay).padStart(2, '0');
+        await updatePrestore(newBalance, { date: dateStr, amount: netRevert, type: 'clear' });
+      }
+      await deleteDayData(curYear, curMonth, editingDay);
+    } catch (e) {
+      toast('清除异常: ' + e.message, true);
+      hideLoading();
+      return;
+    }
+    hideLoading();
+    closeModal('dayModal');
+    renderAll();
+    toast('已清除当天记录');
+  });
+
+  // ===== Memo Add (admin only) =====
+  document.getElementById('memoAddBtn').addEventListener('click', function() {
+    if (userRole !== 'admin') return;
+    document.getElementById('memoInput').value = '';
+    document.getElementById('memoInput').max = new Date(curYear, curMonth + 1, 0).getDate();
+    openModal('memoModal');
+    setTimeout(function() { document.getElementById('memoInput').focus(); }, 400);
+  });
+  document.getElementById('memoSaveBtn').addEventListener('click', async function() {
+    var day = parseInt(document.getElementById('memoInput').value);
+    var daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+    if (!day || day < 1 || day > daysInMonth) { toast('请输入有效日期'); return; }
+    var memoDays = getMemoDaysFromCache(curYear, curMonth);
+    if (memoDays.includes(day)) { toast('该日期已在备忘中'); closeModal('memoModal'); return; }
+    showLoading('添加中...');
+    await addMemo(curYear, curMonth, day);
+    hideLoading();
+    closeModal('memoModal');
+    renderCalendar();
+    renderMemo();
+    toast('已添加 ' + (curMonth + 1) + '月' + day + '日 备忘');
+  });
+  document.getElementById('memoCancel').addEventListener('click', function() { closeModal('memoModal'); });
+
+  // ===== Month Nav =====
+  document.getElementById('prevMonth').addEventListener('click', async function() {
+    curMonth--;
+    if (curMonth < 0) { curMonth = 11; curYear--; }
+    showLoading('加载中...');
+    await loadMonthData();
+    hideLoading();
+  });
+  document.getElementById('nextMonth').addEventListener('click', async function() {
+    curMonth++;
+    if (curMonth > 11) { curMonth = 0; curYear++; }
+    showLoading('加载中...');
+    await loadMonthData();
+    hideLoading();
+  });
+
+  // ===== Export (admin) =====
+  document.getElementById('exportBtn').addEventListener('click', async function() {
+    if (userRole !== 'admin') return;
+    showLoading('导出中...');
+    try {
+      var [daysRes, memosRes, psRes] = await Promise.all([
+        supabase.from('schedule_days').select('*'),
+        supabase.from('host_memos').select('*'),
+        supabase.from('prestore_balance').select('*').limit(1).single()
+      ]);
+      var exportData = {
+        schedule_days: daysRes.data || [],
+        host_memos: memosRes.data || [],
+        prestore_balance: psRes.data || { balance: 0, history: [] },
+        exported_at: new Date().toISOString()
+      };
+      var json = JSON.stringify(exportData, null, 2);
+      var blob = new Blob([json], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'anchor_schedule_export_' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      hideLoading();
+      toast('数据已导出 📤');
+    } catch (e) {
+      hideLoading();
+      toast('导出失败: ' + e.message, true);
+    }
+  });
+
+  // ===== Import (admin) =====
+  document.getElementById('importBtn').addEventListener('click', function() {
+    if (userRole !== 'admin') return;
+    document.getElementById('importTextarea').value = '';
+    openModal('importModal');
+  });
+  document.getElementById('importCancel').addEventListener('click', function() { closeModal('importModal'); });
+  document.getElementById('importFileBtn').addEventListener('click', function() {
+    document.getElementById('importFile').click();
+  });
+  document.getElementById('importFile').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) { document.getElementById('importTextarea').value = ev.target.result; };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+  document.getElementById('importConfirm').addEventListener('click', async function() {
+    var text = document.getElementById('importTextarea').value.trim();
+    if (!text) { toast('请粘贴或选择数据文件'); return; }
+    try {
+      var imported = JSON.parse(text);
+    } catch (e) {
+      toast('JSON 格式错误，请检查', true);
+      return;
+    }
+
+    showLoading('导入中...');
+    try {
+      // Handle new Supabase format
+      if (imported.schedule_days && Array.isArray(imported.schedule_days)) {
+        // Clear existing data first
+        await supabase.from('schedule_days').delete().neq('id', 0);
+        await supabase.from('host_memos').delete().neq('id', 0);
+        // Insert schedule days (strip ids for fresh insert)
+        if (imported.schedule_days.length > 0) {
+          var dayRows = imported.schedule_days.map(function(r) {
+            return { year_month: r.year_month, day: r.day, hours: r.hours, is_host: r.is_host, prestore: r.prestore, used_prestore: r.used_prestore };
+          });
+          // Batch in chunks of 100
+          for (var i = 0; i < dayRows.length; i += 100) {
+            var chunk = dayRows.slice(i, i + 100);
+            var { error } = await supabase.from('schedule_days').insert(chunk);
+            if (error) throw error;
+          }
+        }
+        // Insert memos
+        if (imported.host_memos && imported.host_memos.length > 0) {
+          var memoRows = imported.host_memos.map(function(r) {
+            return { year_month: r.year_month, day: r.day };
+          });
+          for (var i = 0; i < memoRows.length; i += 100) {
+            var chunk = memoRows.slice(i, i + 100);
+            var { error } = await supabase.from('host_memos').insert(chunk);
+            if (error) throw error;
+          }
+        }
+        // Update prestore
+        if (imported.prestore_balance) {
+          var ps = await fetchPrestore();
+          await supabase
+            .from('prestore_balance')
+            .update({ balance: imported.prestore_balance.balance || 0, history: imported.prestore_balance.history || [] })
+            .eq('id', ps.id);
+        }
+      } else {
+        // Handle old localStorage format (anchor_schedule_YYYY-MM, anchor_prestore)
+        await supabase.from('schedule_days').delete().neq('id', 0);
+        await supabase.from('host_memos').delete().neq('id', 0);
+        var allDayRows = [];
+        var allMemoRows = [];
+        Object.keys(imported).forEach(function(key) {
+          if (key.startsWith('anchor_schedule_')) {
+            var ym = key.replace('anchor_schedule_', '');
+            var mData = imported[key];
+            if (mData.days) {
+              Object.keys(mData.days).forEach(function(d) {
+                var dd = mData.days[d];
+                allDayRows.push({
+                  year_month: ym, day: parseInt(d),
+                  hours: parseInt(dd.hours) || 0,
+                  is_host: !!dd.isHost,
+                  prestore: parseInt(dd.prestore) || 0,
+                  used_prestore: parseInt(dd.usedPrestore) || 0
+                });
+              });
+            }
+            if (mData.hostMemo && mData.hostMemo.length > 0) {
+              mData.hostMemo.forEach(function(d) {
+                allMemoRows.push({ year_month: ym, day: parseInt(d) });
+              });
+            }
+          }
+        });
+        if (allDayRows.length > 0) {
+          for (var i = 0; i < allDayRows.length; i += 100) {
+            var { error } = await supabase.from('schedule_days').insert(allDayRows.slice(i, i + 100));
+            if (error) throw error;
+          }
+        }
+        if (allMemoRows.length > 0) {
+          for (var i = 0; i < allMemoRows.length; i += 100) {
+            var { error } = await supabase.from('host_memos').insert(allMemoRows.slice(i, i + 100));
+            if (error) throw error;
+          }
+        }
+        if (imported.anchor_prestore) {
+          var ps = await fetchPrestore();
+          await supabase
+            .from('prestore_balance')
+            .update({ balance: parseInt(imported.anchor_prestore.balance) || 0, history: imported.anchor_prestore.history || [] })
+            .eq('id', ps.id);
+        }
+      }
+      // Clear all caches
+      monthDaysCache = {};
+      monthMemosCache = {};
+      prestoreCache = null;
+      await loadMonthData();
+      closeModal('importModal');
+      hideLoading();
+      toast('数据导入成功 📥');
+    } catch (e) {
+      hideLoading();
+      toast('导入失败: ' + e.message, true);
+    }
+  });
+
+  // ===== Close modals on overlay click =====
+  document.querySelectorAll('.modal-overlay').forEach(function(ov) {
+    ov.addEventListener('click', function(e) {
+      if (e.target === ov) ov.classList.remove('open');
+    });
+  });
+
+  // ===== Month Label =====
+  function updateMonthLabel() {
+    document.getElementById('monthLabel').textContent = curYear + '年' + (curMonth + 1) + '月';
+  }
+
+  // ===== Render All =====
+  function renderAll() {
+    updateMonthLabel();
+    renderOverview();
+    renderCalendar();
+    renderMemo();
+  }
+
+  // ===== Init =====
+  if (checkSavedLogin()) {
+    enterApp();
+  }
+})();
+</script>
+</body>
+</html>
